@@ -3,13 +3,13 @@
 ## Install
 
 ```bash
-pnpm install
+npm install
 ```
 
-## Run kiosk frontend
+## Run frontend + API together
 
 ```bash
-pnpm dev
+npm run dev:all
 ```
 
 Open:
@@ -21,34 +21,68 @@ http://localhost:5174/status
 http://localhost:5174/admin
 ```
 
-## Run API skeleton
-
-In a second terminal:
-
-```bash
-pnpm dev:api
-```
-
 Health check:
 
 ```bash
 curl http://localhost:4110/api/healthz
 ```
 
+## Hostinger background test
+
+```bash
+cd ~/SBB-Kiosk-Ordering
+
+git pull --ff-only origin main
+npm install
+npm run build
+
+nohup npm run dev:all > /tmp/sbb-kiosk.log 2>&1 &
+
+sleep 3
+curl -I http://127.0.0.1:5174/kiosk
+curl http://127.0.0.1:4110/api/healthz
+```
+
+Open:
+
+```text
+http://76.13.189.158:5174/kiosk
+http://76.13.189.158:5174/kitchen
+http://76.13.189.158:5174/status
+http://76.13.189.158:5174/admin
+```
+
 ## Build check
 
 ```bash
-pnpm build
+npm run build
 ```
 
 ## Current MVP behaviour
 
-The frontend currently uses browser localStorage for the fastest first working loop:
+The frontend now tries the shared API first:
 
 ```text
-/kiosk creates order
-/kitchen reads order and updates status
-/status displays preparing / ready tickets
+/kiosk creates order through /api/orders
+/kitchen reads shared orders from /api/orders
+/status reads shared orders from /api/orders
 ```
 
-The API and Drizzle schema are scaffolded as the next layer. The next patch should move the frontend from localStorage to API-backed orders.
+If the API is not running, the app falls back to browser localStorage so the kiosk can still be tested on one device.
+
+The screen badge shows:
+
+```text
+Shared live = API is connected
+Local test = API is not available and localStorage fallback is being used
+```
+
+## Current data layer
+
+The API currently stores orders in server memory while the UI is tested across devices.
+
+Next database patch:
+
+```text
+Move Express order storage from memory to Postgres/Drizzle tables.
+```
