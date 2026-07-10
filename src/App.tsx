@@ -3,6 +3,7 @@ import { ArrowLeft, Check, ChefHat, Clock, Home, Minus, Plus, ReceiptText, Shopp
 import { categories, menuItems, modifierGroups } from "./data/menu";
 import { createOrder, getOrders, saveOrders, updateOrderStatus } from "./lib/orders";
 import { createApiOrder, fetchApiOrders, updateApiOrderStatus, type OrderSource } from "./lib/api";
+import { safeId } from "./lib/id";
 import type { CartItem, MenuItem, Modifier, Order, OrderStatus, OrderType } from "./types";
 
 const formatThb = (value: number) => `฿${value.toLocaleString("en-TH")}`;
@@ -46,12 +47,10 @@ function useOrders() {
 
     void refresh();
     window.addEventListener("storage", refresh);
-    window.addEventListener("sbb-orders-updated", refresh);
     const timer = window.setInterval(refresh, 2000);
     return () => {
       alive = false;
       window.removeEventListener("storage", refresh);
-      window.removeEventListener("sbb-orders-updated", refresh);
       window.clearInterval(timer);
     };
   }, []);
@@ -109,7 +108,7 @@ function KioskScreen({ navigate }: { navigate: (path: string) => void }) {
     setCart((current) => [
       ...current,
       {
-        cartId: crypto.randomUUID(),
+        cartId: safeId("cart"),
         itemId: selectedItem.id,
         name: selectedItem.name,
         priceThb: selectedItem.priceThb,
