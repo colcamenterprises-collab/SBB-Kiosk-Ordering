@@ -13,6 +13,7 @@ import "./start-screen-fix.css";
 import "./start-screen-clean.css";
 import "./logo-mark.css";
 import "./order-heading-tweak.css";
+import "./order-page-clean.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
