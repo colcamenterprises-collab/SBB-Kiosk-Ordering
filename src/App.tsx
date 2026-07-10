@@ -5,6 +5,7 @@ import { createOrder, getOrders, saveOrders, updateOrderStatus } from "./lib/ord
 import { createApiOrder, fetchApiOrders, updateApiOrderStatus, type OrderSource } from "./lib/api";
 import { safeId } from "./lib/id";
 import { announceReadyList, announceReadyOrder, announceVoiceEnabled, canUseSpeech } from "./lib/voice";
+import { StaffPosScreen } from "./StaffPos";
 import type { CartItem, MenuItem, Modifier, Order, OrderStatus, OrderType } from "./types";
 
 const formatThb = (value: number) => `฿${value.toLocaleString("en-TH")}`;
@@ -93,6 +94,7 @@ async function setOrderStatus(orderId: string, status: OrderStatus) {
 export function App() {
   const { path, navigate } = useRoute();
 
+  if (path === "/pos") return <StaffPosScreen navigate={navigate} />;
   if (path === "/kitchen") return <KitchenScreen navigate={navigate} />;
   if (path === "/status") return <StatusScreen navigate={navigate} />;
   if (path === "/admin") return <AdminScreen navigate={navigate} />;
@@ -190,6 +192,7 @@ function KioskScreen({ navigate }: { navigate: (path: string) => void }) {
           <button onClick={() => setOrderType("pickup")}><ReceiptText />Pickup</button>
         </section>
         <section className="staff-links">
+          <button onClick={() => navigate("/pos")}><ReceiptText /> Staff POS</button>
           <button onClick={() => navigate("/kitchen")}><ChefHat /> Kitchen</button>
           <button onClick={() => navigate("/status")}><Tv /> Status</button>
         </section>
