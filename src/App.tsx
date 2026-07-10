@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
-import { ArrowLeft, Check, ChefHat, Clock, Home, Minus, Plus, ReceiptText, ShoppingCart, Tv, Wifi, WifiOff } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, Check, ChefHat, Clock, Home, Minus, Plus, ReceiptText, RotateCcw, ShoppingCart, Tv, Volume2, Wifi, WifiOff } from "lucide-react";
 import { categories, menuItems, modifierGroups } from "./data/menu";
 import { createOrder, getOrders, saveOrders, updateOrderStatus } from "./lib/orders";
 import { createApiOrder, fetchApiOrders, updateApiOrderStatus, type OrderSource } from "./lib/api";
 import { safeId } from "./lib/id";
+import { announceReadyList, announceReadyOrder, announceVoiceEnabled, canUseSpeech } from "./lib/voice";
 import type { CartItem, MenuItem, Modifier, Order, OrderStatus, OrderType } from "./types";
 
 const formatThb = (value: number) => `฿${value.toLocaleString("en-TH")}`;
@@ -310,13 +311,62 @@ function KitchenTicket({ order }: { order: Order }) {
 
 function StatusScreen({ navigate }: { navigate: (path: string) => void }) {
   const { orders, source } = useOrders();
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [voiceSupported, setVoiceSupported] = useState(() => canUseSpeech());
+  const announcedReadyIdsRef = useRef<Set<string>>(new Set());
+  const previousReadyIdsRef = useRef<Set<string>>(new Set());
   const preparing = orders.filter((order) => order.status === "new" || order.status === "preparing");
   const ready = orders.filter((order) => order.status === "ready");
+
+  useEffect(() => {
+    setVoiceSupported(canUseSpeech());
+  }, []);
+
+  useEffect(() => {
+    const readyIds = new Set(ready.map((order) => order.id));
+
+    if (!voiceEnabled) {
+      previousReadyIdsRef.current = readyIds;
+      return;
+    }
+
+    ready.forEach((order) => {
+      const becameReady = !previousReadyIdsRef.current.has(order.id);
+      const alreadyAnnounced = announcedReadyIdsRef.current.has(order.id);
+      if (becameReady && !alreadyAnnounced) {
+        announcedReadyIdsRef.current.add(order.id);
+        announceReadyOrder(order.ticketNumber);
+      }
+    });
+
+    previousReadyIdsRef.current = readyIds;
+  }, [ready, voiceEnabled]);
+
+  const enableVoice = () => {
+    const currentReadyIds = new Set(ready.map((order) => order.id));
+    currentReadyIds.forEach((id) => announcedReadyIdsRef.current.add(id));
+    previousReadyIdsRef.current = currentReadyIds;
+    setVoiceEnabled(true);
+    announceVoiceEnabled();
+  };
+
+  const replayReadyOrders = () => {
+    ready.forEach((order) => announcedReadyIdsRef.current.add(order.id));
+    announceReadyList(ready.map((order) => order.ticketNumber));
+  };
 
   return (
     <main className="status-shell">
       <button className="status-back" onClick={() => navigate("/kiosk")}><ArrowLeft /> Kiosk</button>
       <div className="status-sync"><SyncBadge source={source} /></div>
+      <div className="voice-controls">
+        <button className={voiceEnabled ? "voice-button active" : "voice-button"} disabled={!voiceSupported || voiceEnabled} onClick={enableVoice}>
+          <Volume2 size={17} /> {voiceEnabled ? "Voice On" : "Enable Voice"}
+        </button>
+        <button className="voice-button" disabled={!voiceSupported || !voiceEnabled} onClick={replayReadyOrders}>
+          <RotateCcw size={17} /> Replay Ready
+        </button>
+      </div>
       <section><span>Now Preparing</span><div>{preparing.map((order) => <b key={order.id}>#{order.ticketNumber}</b>)}</div></section>
       <section className="ready"><span>Ready for Collection</span><div>{ready.map((order) => <b key={order.id}>#{order.ticketNumber}</b>)}</div></section>
     </main>
