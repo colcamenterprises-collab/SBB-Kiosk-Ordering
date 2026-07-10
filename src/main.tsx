@@ -7,14 +7,6 @@ import "./sync.css";
 import "./error-boundary.css";
 import "./voice.css";
 import "./pos.css";
-import "./premier.css";
-import "./target-ui.css";
-import "./start-screen-fix.css";
-import "./start-screen-clean.css";
-import "./logo-mark.css";
-import "./order-heading-tweak.css";
-import "./order-page-clean.css";
-import "./design-lock.css";
 import "./white-ui.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
