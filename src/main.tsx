@@ -8,6 +8,7 @@ import "./error-boundary.css";
 import "./voice.css";
 import "./pos.css";
 import "./white-ui.css";
+import "./customer-kiosk.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
