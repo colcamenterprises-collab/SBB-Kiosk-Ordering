@@ -1,0 +1,195 @@
+/* Final customer kiosk visual pass
+   Focus: match supplied reference closer.
+   - no yellow outer/background frame
+   - no outer app card/panel border
+   - tighter headline and category rhythm
+   - product image visible, controlled, not oversized
+   - three cards fully visible in one kiosk viewport
+*/
+
+.customer-screen {
+  min-height: 100vh !important;
+  width: 100vw !important;
+  display: grid !important;
+  place-items: center !important;
+  overflow: hidden !important;
+  background: #ffffff !important;
+  padding: clamp(0.75rem, 1.6vw, 1.25rem) !important;
+}
+
+.customer-stage {
+  width: min(100%, 88rem) !important;
+  height: calc(100vh - clamp(1.5rem, 3.2vw, 2.5rem)) !important;
+  min-height: 0 !important;
+  display: grid !important;
+  grid-template-rows: auto auto minmax(0, 1fr) !important;
+  align-content: center !important;
+  gap: clamp(1rem, 1.55vw, 1.45rem) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+  padding: clamp(2rem, 4.1vw, 3.9rem) clamp(2.2rem, 5.1vw, 5.1rem) clamp(1.25rem, 2.5vw, 2.25rem) !important;
+}
+
+.customer-stage::before,
+.customer-stage::after {
+  display: none !important;
+  content: none !important;
+}
+
+.customer-title-block h1 {
+  display: inline-block !important;
+  margin: 0 !important;
+  color: #5a000b !important;
+  font-family: "Arial Black", Impact, Haettenschweiler, system-ui, sans-serif !important;
+  font-size: clamp(2.1rem, 4.15vw, 4.05rem) !important;
+  font-weight: 1000 !important;
+  line-height: 0.88 !important;
+  letter-spacing: -0.065em !important;
+  text-transform: uppercase !important;
+  transform: scaleX(0.9) !important;
+  transform-origin: center !important;
+}
+
+.customer-title-block p {
+  margin: 0.72rem 0 0 !important;
+  color: rgba(20, 2, 2, 0.42) !important;
+  font-size: clamp(0.82rem, 1.16vw, 1rem) !important;
+  font-weight: 600 !important;
+}
+
+.customer-tabs {
+  gap: clamp(0.55rem, 1.25vw, 1.05rem) !important;
+  padding: 0 !important;
+}
+
+.customer-tabs button {
+  min-width: clamp(6.3rem, 8.7vw, 8.4rem) !important;
+  min-height: clamp(1.85rem, 2.55vw, 2.2rem) !important;
+  border-radius: 999px !important;
+  background: #f1e5c9 !important;
+  color: #4f0710 !important;
+  font-family: "Arial Black", Impact, Haettenschweiler, system-ui, sans-serif !important;
+  font-size: clamp(0.68rem, 0.9vw, 0.86rem) !important;
+  font-weight: 1000 !important;
+  letter-spacing: -0.04em !important;
+}
+
+.customer-tabs button.active {
+  background: #ffc928 !important;
+  color: #150202 !important;
+}
+
+.customer-card-grid {
+  width: 100% !important;
+  min-height: 0 !important;
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: clamp(1rem, 1.9vw, 1.65rem) !important;
+  align-items: stretch !important;
+  overflow: visible !important;
+}
+
+.craving-card {
+  min-height: 0 !important;
+  height: min(45vh, 27.4rem) !important;
+  display: grid !important;
+  grid-template-rows: minmax(10.8rem, 1fr) auto auto auto !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(61, 26, 0, 0.13) !important;
+  border-radius: clamp(1rem, 1.55vw, 1.38rem) !important;
+  background: #fffefa !important;
+  padding: clamp(0.88rem, 1.35vw, 1.25rem) !important;
+  box-shadow: 0 9px 22px rgba(61, 26, 0, 0.075) !important;
+}
+
+.craving-image-button {
+  min-height: 0 !important;
+  height: 100% !important;
+  display: grid !important;
+  place-items: center !important;
+  overflow: visible !important;
+  background: transparent !important;
+}
+
+.craving-image-button img {
+  width: min(86%, 18.5rem) !important;
+  height: auto !important;
+  max-height: min(21vh, 12.9rem) !important;
+  object-fit: contain !important;
+  object-position: center bottom !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  filter: drop-shadow(0 10px 10px rgba(61, 26, 0, 0.1)) !important;
+}
+
+.craving-card h2 {
+  margin: 0.15rem 0 0 !important;
+  color: #110202 !important;
+  font-family: "Arial Black", Impact, Haettenschweiler, system-ui, sans-serif !important;
+  font-size: clamp(0.95rem, 1.28vw, 1.22rem) !important;
+  font-weight: 1000 !important;
+  line-height: 1.02 !important;
+  letter-spacing: -0.055em !important;
+  text-transform: uppercase !important;
+}
+
+.craving-card p {
+  min-height: clamp(2rem, 4.8vh, 2.55rem) !important;
+  margin: 0.45rem 0 0 !important;
+  color: rgba(20, 2, 2, 0.44) !important;
+  font-size: clamp(0.78rem, 0.98vw, 0.92rem) !important;
+  font-weight: 600 !important;
+  line-height: 1.33 !important;
+}
+
+.craving-card footer {
+  margin-top: clamp(0.65rem, 1.15vw, 1rem) !important;
+}
+
+.craving-card footer strong {
+  color: #f25f1d !important;
+  font-size: clamp(1.42rem, 2.02vw, 1.9rem) !important;
+  font-weight: 1000 !important;
+  letter-spacing: -0.055em !important;
+}
+
+.craving-add-button {
+  width: clamp(2.15rem, 2.85vw, 2.55rem) !important;
+  height: clamp(2.15rem, 2.85vw, 2.55rem) !important;
+  border-radius: 0.62rem !important;
+  background: #5a000b !important;
+  color: #ffffff !important;
+  font-size: clamp(1.1rem, 1.5vw, 1.45rem) !important;
+}
+
+.customer-item-sheet > img {
+  width: 86% !important;
+  height: min(30vh, 15rem) !important;
+  display: block !important;
+  margin: 0 auto !important;
+  object-fit: contain !important;
+  background: transparent !important;
+}
+
+@media (max-width: 980px) {
+  .customer-screen {
+    overflow: auto !important;
+    place-items: start center !important;
+  }
+
+  .customer-stage {
+    height: auto !important;
+    padding: 2rem 1.2rem 2.4rem !important;
+  }
+
+  .customer-card-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .craving-card {
+    height: 23rem !important;
+  }
+}
