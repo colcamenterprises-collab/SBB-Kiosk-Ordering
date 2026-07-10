@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Check, ChefHat, Clock, Home, Minus, Plus, ReceiptText, ShoppingCart, Tv } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowLeft, Check, ChefHat, Clock, Home, Minus, Plus, ReceiptText, ShoppingCart, Tv, Wifi, WifiOff } from "lucide-react";
 import { categories, menuItems, modifierGroups } from "./data/menu";
-import { createOrder, getOrders, updateOrderStatus } from "./lib/orders";
+import { createOrder, getOrders, saveOrders, updateOrderStatus } from "./lib/orders";
+import { createApiOrder, fetchApiOrders, updateApiOrderStatus, type OrderSource } from "./lib/api";
 import type { CartItem, MenuItem, Modifier, Order, OrderStatus, OrderType } from "./types";
 
 const formatThb = (value: number) => `฿${value.toLocaleString("en-TH")}`;
@@ -24,18 +25,47 @@ function useRoute() {
 
 function useOrders() {
   const [orders, setOrders] = useState<Order[]>(() => getOrders());
+  const [source, setSource] = useState<OrderSource>("local");
+
   useEffect(() => {
-    const refresh = () => setOrders(getOrders());
+    let alive = true;
+
+    const refresh = async () => {
+      try {
+        const apiOrders = await fetchApiOrders();
+        if (!alive) return;
+        setOrders(apiOrders);
+        saveOrders(apiOrders);
+        setSource("api");
+      } catch {
+        if (!alive) return;
+        setOrders(getOrders());
+        setSource("local");
+      }
+    };
+
+    void refresh();
     window.addEventListener("storage", refresh);
     window.addEventListener("sbb-orders-updated", refresh);
-    const timer = window.setInterval(refresh, 2500);
+    const timer = window.setInterval(refresh, 2000);
     return () => {
+      alive = false;
       window.removeEventListener("storage", refresh);
       window.removeEventListener("sbb-orders-updated", refresh);
       window.clearInterval(timer);
     };
   }, []);
-  return orders;
+
+  return { orders, source };
+}
+
+async function setOrderStatus(orderId: string, status: OrderStatus) {
+  try {
+    const updated = await updateApiOrderStatus(orderId, status);
+    saveOrders(getOrders().map((order) => order.id === orderId ? updated : order));
+  } catch {
+    updateOrderStatus(orderId, status);
+  }
 }
 
 export function App() {
@@ -47,6 +77,15 @@ export function App() {
   return <KioskScreen navigate={navigate} />;
 }
 
+function SyncBadge({ source }: { source: OrderSource }) {
+  return (
+    <span className={source === "api" ? "sync-badge online" : "sync-badge"}>
+      {source === "api" ? <Wifi size={15} /> : <WifiOff size={15} />}
+      {source === "api" ? "Shared live" : "Local test"}
+    </span>
+  );
+}
+
 function KioskScreen({ navigate }: { navigate: (path: string) => void }) {
   const [orderType, setOrderType] = useState<OrderType | null>(null);
   const [activeCategory, setActiveCategory] = useState(categories[0].id);
@@ -54,6 +93,8 @@ function KioskScreen({ navigate }: { navigate: (path: string) => void }) {
   const [selectedModifiers, setSelectedModifiers] = useState<Modifier[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [confirmedOrder, setConfirmedOrder] = useState<Order | null>(null);
+  const [orderSource, setOrderSource] = useState<OrderSource>("local");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const activeItems = menuItems.filter((item) => item.categoryId === activeCategory && item.isAvailable);
   const cartTotal = cart.reduce((sum, item) => {
@@ -81,11 +122,21 @@ function KioskScreen({ navigate }: { navigate: (path: string) => void }) {
     setSelectedModifiers([]);
   };
 
-  const submitOrder = () => {
-    if (!orderType || cart.length === 0) return;
-    const order = createOrder(orderType, cart);
-    setConfirmedOrder(order);
-    setCart([]);
+  const submitOrder = async () => {
+    if (!orderType || cart.length === 0 || isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const order = await createApiOrder(orderType, cart);
+      setConfirmedOrder(order);
+      setOrderSource("api");
+    } catch {
+      const order = createOrder(orderType, cart);
+      setConfirmedOrder(order);
+      setOrderSource("local");
+    } finally {
+      setCart([]);
+      setIsSubmitting(false);
+    }
   };
 
   if (confirmedOrder) {
@@ -95,6 +146,7 @@ function KioskScreen({ navigate }: { navigate: (path: string) => void }) {
           <div className="success-ring"><Check size={62} /></div>
           <p>Order confirmed</p>
           <h1>#{confirmedOrder.ticketNumber}</h1>
+          <SyncBadge source={orderSource} />
           <span>Watch the status screen for your number.</span>
           <button className="primary-action" onClick={() => { setConfirmedOrder(null); setOrderType(null); }}>Start New Order</button>
         </div>
@@ -154,7 +206,7 @@ function KioskScreen({ navigate }: { navigate: (path: string) => void }) {
         ))}
       </section>
 
-      <CartBar cart={cart} total={cartTotal} onQuantity={(cartId, direction) => {
+      <CartBar cart={cart} total={cartTotal} isSubmitting={isSubmitting} onQuantity={(cartId, direction) => {
         setCart((current) => current.flatMap((item) => {
           if (item.cartId !== cartId) return [item];
           const quantity = item.quantity + direction;
@@ -197,7 +249,7 @@ function KioskScreen({ navigate }: { navigate: (path: string) => void }) {
   );
 }
 
-function CartBar({ cart, total, onQuantity, onSubmit }: { cart: CartItem[]; total: number; onQuantity: (cartId: string, direction: number) => void; onSubmit: () => void }) {
+function CartBar({ cart, total, isSubmitting, onQuantity, onSubmit }: { cart: CartItem[]; total: number; isSubmitting: boolean; onQuantity: (cartId: string, direction: number) => void; onSubmit: () => void }) {
   return (
     <aside className="cart-bar">
       <div className="cart-list">
@@ -211,13 +263,13 @@ function CartBar({ cart, total, onQuantity, onSubmit }: { cart: CartItem[]; tota
           </div>
         ))}
       </div>
-      <div className="cart-total"><span>Total</span><strong>{formatThb(total)}</strong><button disabled={cart.length === 0} onClick={onSubmit}>Place Order</button></div>
+      <div className="cart-total"><span>Total</span><strong>{formatThb(total)}</strong><button disabled={cart.length === 0 || isSubmitting} onClick={onSubmit}>{isSubmitting ? "Sending..." : "Place Order"}</button></div>
     </aside>
   );
 }
 
 function KitchenScreen({ navigate }: { navigate: (path: string) => void }) {
-  const orders = useOrders();
+  const { orders, source } = useOrders();
   const lanes: Array<{ status: OrderStatus; label: string }> = [
     { status: "new", label: "New" },
     { status: "preparing", label: "Preparing" },
@@ -226,7 +278,7 @@ function KitchenScreen({ navigate }: { navigate: (path: string) => void }) {
 
   return (
     <main className="operations-shell">
-      <header className="ops-header"><button onClick={() => navigate("/kiosk")}><ArrowLeft /> Kiosk</button><h1>Kitchen Queue</h1><button onClick={() => navigate("/status")}><Tv /> Status</button></header>
+      <header className="ops-header"><button onClick={() => navigate("/kiosk")}><ArrowLeft /> Kiosk</button><h1>Kitchen Queue</h1><SyncBadge source={source} /><button onClick={() => navigate("/status")}><Tv /> Status</button></header>
       <section className="kitchen-board">
         {lanes.map((lane) => (
           <div className="kitchen-lane" key={lane.status}>
@@ -252,19 +304,20 @@ function KitchenTicket({ order }: { order: Order }) {
           {item.modifiers.length > 0 && <span>{item.modifiers.map((modifier) => modifier.name).join(", ")}</span>}
         </div>
       ))}
-      {next && <button onClick={() => updateOrderStatus(order.id, next)}>{next === "collected" ? "Collected" : `Mark ${next}`}</button>}
+      {next && <button onClick={() => void setOrderStatus(order.id, next)}>{next === "collected" ? "Collected" : `Mark ${next}`}</button>}
     </article>
   );
 }
 
 function StatusScreen({ navigate }: { navigate: (path: string) => void }) {
-  const orders = useOrders();
+  const { orders, source } = useOrders();
   const preparing = orders.filter((order) => order.status === "new" || order.status === "preparing");
   const ready = orders.filter((order) => order.status === "ready");
 
   return (
     <main className="status-shell">
       <button className="status-back" onClick={() => navigate("/kiosk")}><ArrowLeft /> Kiosk</button>
+      <div className="status-sync"><SyncBadge source={source} /></div>
       <section><span>Now Preparing</span><div>{preparing.map((order) => <b key={order.id}>#{order.ticketNumber}</b>)}</div></section>
       <section className="ready"><span>Ready for Collection</span><div>{ready.map((order) => <b key={order.id}>#{order.ticketNumber}</b>)}</div></section>
     </main>
