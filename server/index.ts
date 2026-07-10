@@ -102,7 +102,7 @@ app.use(express.static(distPath, {
   maxAge: 0
 }));
 
-app.get(["/", "/kiosk", "/kitchen", "/status", "/admin"], (_req, res) => {
+app.get(["/", "/kiosk", "/pos", "/kitchen", "/status", "/admin"], (_req, res) => {
   res.sendFile(indexPath);
 });
 
