@@ -88,9 +88,18 @@ app.get("/api/status-board", async (_req, res) => {
   });
 });
 
+app.use((_req, res, next) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  next();
+});
+
 app.use(express.static(distPath, {
   index: false,
-  maxAge: process.env.NODE_ENV === "production" ? "1h" : 0
+  etag: false,
+  lastModified: false,
+  maxAge: 0
 }));
 
 app.get(["/", "/kiosk", "/kitchen", "/status", "/admin"], (_req, res) => {
