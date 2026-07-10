@@ -6,9 +6,17 @@ This runbook installs SBB Kiosk Ordering as a systemd service on the Hostinger V
 
 ```text
 Repo path: /root/SBB-Kiosk-Ordering
-Frontend port: 5174
-API port: 4110
+Production port: 4110
 Service name: sbb-kiosk-ordering
+```
+
+The production service uses Express only:
+
+```text
+Built frontend from /dist
+API routes from /api/*
+Single port 4110
+No Vite preview in production
 ```
 
 ## One-time install
@@ -32,7 +40,7 @@ systemctl status sbb-kiosk-ordering --no-pager
 ## Health checks
 
 ```bash
-curl -I http://127.0.0.1:5174/kiosk
+curl -I http://127.0.0.1:4110/kiosk
 curl http://127.0.0.1:4110/api/healthz
 curl http://127.0.0.1:4110/api/debug/state
 ```
@@ -42,6 +50,15 @@ Expected:
 ```text
 HTTP/1.1 200 OK
 status: ok
+```
+
+## Public test routes
+
+```text
+http://76.13.189.158:4110/kiosk
+http://76.13.189.158:4110/kitchen
+http://76.13.189.158:4110/status
+http://76.13.189.158:4110/admin
 ```
 
 ## Logs
@@ -56,6 +73,13 @@ Live logs:
 journalctl -u sbb-kiosk-ordering -f
 ```
 
+Good startup logs:
+
+```text
+SBB Kiosk server listening on 4110
+Serving built kiosk app from /root/SBB-Kiosk-Ordering/dist
+```
+
 ## Restart after every GitHub patch
 
 ```bash
@@ -66,7 +90,7 @@ npm install
 npm run build
 systemctl restart sbb-kiosk-ordering
 
-curl -I http://127.0.0.1:5174/kiosk
+curl -I http://127.0.0.1:4110/kiosk
 curl http://127.0.0.1:4110/api/healthz
 ```
 
