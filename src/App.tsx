@@ -8,6 +8,28 @@ import { announceReadyList, announceReadyOrder, announceVoiceEnabled, canUseSpee
 import type { CartItem, MenuItem, Modifier, Order, OrderStatus, OrderType } from "./types";
 
 const formatThb = (value: number) => `฿${value.toLocaleString("en-TH")}`;
+const VOICE_ENABLED_STORAGE_KEY = "sbb-status-voice-enabled";
+const VOICE_ANNOUNCED_STORAGE_KEY = "sbb-status-announced-ready-ids";
+
+function loadVoiceEnabled() {
+  return localStorage.getItem(VOICE_ENABLED_STORAGE_KEY) === "true";
+}
+
+function saveVoiceEnabled(enabled: boolean) {
+  localStorage.setItem(VOICE_ENABLED_STORAGE_KEY, enabled ? "true" : "false");
+}
+
+function loadAnnouncedReadyIds() {
+  try {
+    return new Set<string>(JSON.parse(sessionStorage.getItem(VOICE_ANNOUNCED_STORAGE_KEY) ?? "[]"));
+  } catch {
+    return new Set<string>();
+  }
+}
+
+function saveAnnouncedReadyIds(ids: Set<string>) {
+  sessionStorage.setItem(VOICE_ANNOUNCED_STORAGE_KEY, JSON.stringify([...ids]));
+}
 
 function useRoute() {
   const [path, setPath] = useState(window.location.pathname);
@@ -311,9 +333,9 @@ function KitchenTicket({ order }: { order: Order }) {
 
 function StatusScreen({ navigate }: { navigate: (path: string) => void }) {
   const { orders, source } = useOrders();
-  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(() => loadVoiceEnabled());
   const [voiceSupported, setVoiceSupported] = useState(() => canUseSpeech());
-  const announcedReadyIdsRef = useRef<Set<string>>(new Set());
+  const announcedReadyIdsRef = useRef<Set<string>>(loadAnnouncedReadyIds());
   const preparing = orders.filter((order) => order.status === "new" || order.status === "preparing");
   const ready = orders.filter((order) => order.status === "ready");
 
@@ -322,19 +344,26 @@ function StatusScreen({ navigate }: { navigate: (path: string) => void }) {
   }, []);
 
   useEffect(() => {
+    saveVoiceEnabled(voiceEnabled);
+  }, [voiceEnabled]);
+
+  useEffect(() => {
     if (!voiceEnabled) return;
 
     const unseenReady = ready.filter((order) => !announcedReadyIdsRef.current.has(order.id));
     unseenReady.forEach((order, index) => {
       announcedReadyIdsRef.current.add(order.id);
+      saveAnnouncedReadyIds(announcedReadyIdsRef.current);
       window.setTimeout(() => announceReadyOrder(order.ticketNumber), index * 1800);
     });
   }, [ready, voiceEnabled]);
 
   const enableVoice = () => {
     setVoiceEnabled(true);
+    saveVoiceEnabled(true);
     if (ready.length > 0) {
       ready.forEach((order) => announcedReadyIdsRef.current.add(order.id));
+      saveAnnouncedReadyIds(announcedReadyIdsRef.current);
       announceReadyList(ready.map((order) => order.ticketNumber));
       return;
     }
@@ -344,6 +373,7 @@ function StatusScreen({ navigate }: { navigate: (path: string) => void }) {
 
   const replayReadyOrders = () => {
     ready.forEach((order) => announcedReadyIdsRef.current.add(order.id));
+    saveAnnouncedReadyIds(announcedReadyIdsRef.current);
     announceReadyList(ready.map((order) => order.ticketNumber));
   };
 
