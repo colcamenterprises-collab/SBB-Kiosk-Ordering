@@ -1,4 +1,6 @@
 import express from "express";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { categories, menuItems, modifierGroups } from "../src/data/menu";
 import type { OrderStatus, OrderType } from "../src/types";
 import {
@@ -14,6 +16,10 @@ const app = express();
 const port = Number(process.env.PORT ?? 4110);
 const allowedStatuses: OrderStatus[] = ["new", "preparing", "ready", "collected", "cancelled"];
 const allowedOrderTypes: OrderType[] = ["dine_in", "takeaway", "pickup"];
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const distPath = path.resolve(__dirname, "../dist");
+const indexPath = path.join(distPath, "index.html");
 
 app.use(express.json({ limit: "1mb" }));
 
@@ -27,6 +33,7 @@ app.get("/api/debug/state", async (_req, res) => {
   res.json({
     service: "sbb-kiosk-ordering",
     port,
+    staticDist: distPath,
     ...state,
     categoryCount: categories.length,
     itemCount: menuItems.length
@@ -81,6 +88,15 @@ app.get("/api/status-board", async (_req, res) => {
   });
 });
 
+app.use(express.static(distPath, {
+  index: false,
+  maxAge: process.env.NODE_ENV === "production" ? "1h" : 0
+}));
+
+app.get(["/", "/kiosk", "/kitchen", "/status", "/admin"], (_req, res) => {
+  res.sendFile(indexPath);
+});
+
 app.use((error: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error("SBB kiosk API error", error);
   res.status(500).json({ error: "Unexpected kiosk API error" });
@@ -89,5 +105,6 @@ app.use((error: unknown, _req: express.Request, res: express.Response, _next: ex
 await initializeOrderStore();
 
 app.listen(port, "0.0.0.0", () => {
-  console.log(`SBB Kiosk API listening on ${port}`);
+  console.log(`SBB Kiosk server listening on ${port}`);
+  console.log(`Serving built kiosk app from ${distPath}`);
 });
