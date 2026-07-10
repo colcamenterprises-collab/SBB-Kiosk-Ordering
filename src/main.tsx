@@ -9,6 +9,7 @@ import "./voice.css";
 import "./pos.css";
 import "./premier.css";
 import "./target-ui.css";
+import "./start-screen-fix.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
