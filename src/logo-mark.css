@@ -1,0 +1,23 @@
+/* SBB Logo Mark Pass
+   User-directed changes:
+   - remove text under logo
+   - replace placeholder SBB box with SBB burger mark
+*/
+
+.start-screen .brand-hero::before {
+  content: "" !important;
+  width: clamp(5rem, 8vw, 7rem) !important;
+  height: clamp(5rem, 8vw, 7rem) !important;
+  margin: 0 0 clamp(2.5rem, 5vw, 4rem) !important;
+  border-radius: 999px !important;
+  background-color: transparent !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Ccircle cx='512' cy='512' r='476' fill='%23FFD500'/%3E%3Crect x='331' y='285' width='362' height='99' rx='46' fill='none' stroke='%23000' stroke-width='47'/%3E%3Crect x='329' y='457' width='366' height='105' rx='52' fill='none' stroke='%23000' stroke-width='47'/%3E%3Crect x='331' y='629' width='362' height='105' rx='38' fill='none' stroke='%23000' stroke-width='47'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: contain !important;
+  box-shadow: none !important;
+}
+
+.start-screen .brand-hero span {
+  display: none !important;
+}
