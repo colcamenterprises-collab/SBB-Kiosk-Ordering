@@ -36,11 +36,15 @@ git pull --ff-only origin main
 npm install
 npm run build
 
+pkill -f "vite --host" || true
+pkill -f "tsx server/index.ts" || true
+
 nohup npm run dev:all > /tmp/sbb-kiosk.log 2>&1 &
 
 sleep 3
 curl -I http://127.0.0.1:5174/kiosk
 curl http://127.0.0.1:4110/api/healthz
+curl http://127.0.0.1:4110/api/debug/state
 ```
 
 Open:
@@ -79,10 +83,23 @@ Local test = API is not available and localStorage fallback is being used
 
 ## Current data layer
 
-The API currently stores orders in server memory while the UI is tested across devices.
-
-Next database patch:
+The API now uses a persistent order store:
 
 ```text
-Move Express order storage from memory to Postgres/Drizzle tables.
+DATABASE_URL present -> Postgres kiosk_orders + kiosk_state tables
+DATABASE_URL missing/unavailable -> memory fallback
 ```
+
+The diagnostics endpoint shows the active data source:
+
+```bash
+curl http://localhost:4110/api/debug/state
+```
+
+Look for:
+
+```text
+dataSource: postgres
+```
+
+If it shows `memory`, the app still works, but orders will not survive an API restart.
