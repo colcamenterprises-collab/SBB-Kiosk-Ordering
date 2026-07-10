@@ -7,9 +7,10 @@
     "dev": "vite --host 0.0.0.0",
     "dev:api": "tsx server/index.ts",
     "dev:all": "node scripts/dev-all.mjs",
+    "serve:all": "node scripts/serve-all.mjs",
     "build": "tsc -b && vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "start": "node dist-server/index.js",
+    "start": "npm run serve:all",
     "typecheck": "tsc -b"
   },
   "dependencies": {
