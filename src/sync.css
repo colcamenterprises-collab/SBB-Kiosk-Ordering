@@ -1,0 +1,44 @@
+.sync-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.38rem;
+  width: fit-content;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.72);
+  padding: 0.45rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sync-badge.online {
+  border-color: rgba(40, 214, 126, 0.35);
+  background: rgba(40, 214, 126, 0.14);
+  color: #9dffbd;
+}
+
+.success-card .sync-badge {
+  background: rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.14);
+  color: #080808;
+}
+
+.success-card .sync-badge.online {
+  background: #080808;
+  color: #9dffbd;
+}
+
+.status-sync {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 5;
+}
+
+.ops-header .sync-badge {
+  margin-left: auto;
+}
