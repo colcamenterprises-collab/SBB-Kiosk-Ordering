@@ -1,0 +1,147 @@
+html,
+body,
+#root,
+.kiosk-shell,
+.start-screen,
+.menu-screen,
+.pos-shell,
+.operations-shell,
+.status-shell,
+.confirmation-screen {
+  background: #fff !important;
+  background-image: none !important;
+  color: #0a0a0a !important;
+}
+
+.start-screen .brand-hero,
+.menu-screen .kiosk-header,
+.menu-screen .category-rail,
+.menu-screen .product-grid,
+.pos-header,
+.pos-menu-panel,
+.pos-cart-panel,
+.kitchen-lane,
+.status-shell section,
+.admin-card {
+  background: #fff !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+.start-screen .brand-hero {
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+
+.start-screen .brand-hero::after {
+  display: none !important;
+}
+
+.start-screen .order-type-grid button,
+.menu-screen .category-rail button,
+.menu-screen .product-card,
+.pos-order-types button,
+.pos-categories button,
+.pos-product-grid button,
+.ticket-card,
+.item-modal,
+.modifier-grid button {
+  background: #fff !important;
+  background-image: none !important;
+  color: #0a0a0a !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: none !important;
+}
+
+.start-screen .order-type-grid button:first-child,
+.menu-screen .category-rail button.active,
+.pos-order-types button.active,
+.pos-categories button.active,
+.modifier-grid button.active,
+.menu-screen .cart-total button,
+.item-modal .primary-action,
+.pos-total-card button {
+  background: #ff7a1a !important;
+  color: #fff !important;
+  border-color: #ff7a1a !important;
+}
+
+.menu-screen {
+  height: 100vh !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(19rem, 23rem) !important;
+  grid-template-rows: auto auto minmax(0, 1fr) !important;
+  gap: 1rem !important;
+  padding: 1rem !important;
+  overflow: hidden !important;
+}
+
+.menu-screen .kiosk-header {
+  grid-column: 1 / 2 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+}
+
+.menu-screen .kiosk-header > div {
+  display: none !important;
+}
+
+.menu-screen .kiosk-header button {
+  background: #fff !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: #0a0a0a !important;
+}
+
+.menu-screen .category-rail,
+.menu-screen .product-grid {
+  grid-column: 1 / 2 !important;
+}
+
+.menu-screen .cart-bar {
+  grid-column: 2 / 3 !important;
+  grid-row: 1 / 4 !important;
+  height: 100% !important;
+  background: #fff !important;
+  color: #0a0a0a !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: none !important;
+}
+
+.menu-screen .product-card img {
+  background: transparent !important;
+  object-fit: contain !important;
+}
+
+.menu-screen .product-card strong,
+.pos-product-grid strong {
+  color: #ff7a1a !important;
+}
+
+.status-shell section.ready {
+  background: #fff !important;
+  color: #0a0a0a !important;
+}
+
+@media (max-width: 759px) {
+  .menu-screen {
+    height: auto !important;
+    min-height: 100vh !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto auto auto auto !important;
+    overflow: auto !important;
+  }
+
+  .menu-screen .kiosk-header,
+  .menu-screen .category-rail,
+  .menu-screen .product-grid,
+  .menu-screen .cart-bar {
+    grid-column: 1 !important;
+  }
+
+  .menu-screen .cart-bar {
+    grid-row: auto !important;
+    min-height: 20rem !important;
+  }
+}
