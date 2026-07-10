@@ -5,6 +5,7 @@ import { createOrder, getOrders, saveOrders, updateOrderStatus } from "./lib/ord
 import { createApiOrder, fetchApiOrders, updateApiOrderStatus, type OrderSource } from "./lib/api";
 import { safeId } from "./lib/id";
 import { announceReadyList, announceReadyOrder, announceVoiceEnabled, canUseSpeech } from "./lib/voice";
+import { CustomerKioskMenu } from "./CustomerKioskMenu";
 import { StaffPosScreen } from "./StaffPos";
 import type { CartItem, MenuItem, Modifier, Order, OrderStatus, OrderType } from "./types";
 
@@ -99,7 +100,7 @@ export function App() {
   if (path === "/kitchen") return <KitchenScreen navigate={navigate} />;
   if (path === "/status") return <StatusScreen navigate={navigate} />;
   if (path === "/admin") return <AdminScreen navigate={navigate} />;
-  return <KioskScreen navigate={navigate} />;
+  return <CustomerKioskMenu />;
 }
 
 function SyncBadge({ source }: { source: OrderSource }) {
@@ -120,15 +121,11 @@ function KioskScreen({ navigate }: { navigate: (path: string) => void }) {
   const [confirmedOrder, setConfirmedOrder] = useState<Order | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const availableItems = menuItems.filter((item) => item.isAvailable);
-  const activeItems = activeCategory === "hot-selling"
-    ? availableItems.filter((item) => item.categoryId === "burgers").slice(0, 3)
-    : availableItems.filter((item) => item.categoryId === activeCategory).slice(0, 3);
+  const activeItems = menuItems.filter((item) => item.categoryId === activeCategory && item.isAvailable);
   const cartTotal = cart.reduce((sum, item) => {
     const extras = item.modifiers.reduce((extraSum, modifier) => extraSum + modifier.priceDeltaThb, 0);
     return sum + (item.priceThb + extras) * item.quantity;
   }, 0);
-  const cartLineCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const itemGroups = selectedItem?.modifierGroupIds?.map((groupId) => modifierGroups.find((group) => group.id === groupId)).filter(Boolean) ?? [];
 
@@ -171,12 +168,12 @@ function KioskScreen({ navigate }: { navigate: (path: string) => void }) {
 
   if (confirmedOrder) {
     return (
-      <main className="kiosk-shell customer-confirmation">
+      <main className="kiosk-shell confirmation-screen">
         <div className="success-card">
           <div className="success-ring"><Check size={62} /></div>
           <p>Order confirmed</p>
           <h1>#{confirmedOrder.ticketNumber}</h1>
-          <span>Watch the pickup screen for your number.</span>
+          <span>Watch the status screen for your number.</span>
           <button className="primary-action" onClick={() => setConfirmedOrder(null)}>Start New Order</button>
         </div>
       </main>
@@ -200,7 +197,7 @@ function KioskScreen({ navigate }: { navigate: (path: string) => void }) {
         </nav>
 
         <section className="customer-product-grid">
-          {activeItems.map((item) => (
+          {activeItems.slice(0, 3).map((item) => (
             <article className="customer-product-card" key={item.id}>
               <button className="customer-product-open" onClick={() => { setSelectedItem(item); setSelectedModifiers([]); }} aria-label={`Customize ${item.name}`}>
                 <img src={item.image} alt={item.name} />
@@ -215,21 +212,17 @@ function KioskScreen({ navigate }: { navigate: (path: string) => void }) {
           ))}
         </section>
 
-        <section className={cart.length === 0 ? "customer-cart-strip empty" : "customer-cart-strip"} aria-live="polite">
-          <div className="customer-cart-summary">
-            <strong>{cartLineCount} item{cartLineCount === 1 ? "" : "s"}</strong>
-            <span>Total {formatThb(cartTotal)}</span>
-          </div>
-          <button className="customer-checkout-button" disabled={cart.length === 0 || isSubmitting} onClick={submitOrder}>
-            {isSubmitting ? "Sending..." : "Place Order"}
-          </button>
-        </section>
-      </section>
-
-      <section className="customer-utility-links" aria-label="Staff shortcuts">
-        <button onClick={() => navigate("/pos")}>POS</button>
-        <button onClick={() => navigate("/kitchen")}>Kitchen</button>
-        <button onClick={() => navigate("/status")}>Status</button>
+        {cart.length > 0 && (
+          <section className="customer-cart-strip" aria-live="polite">
+            <div className="customer-cart-summary">
+              <strong>{cart.length} item{cart.length === 1 ? "" : "s"}</strong>
+              <span>Total {formatThb(cartTotal)}</span>
+            </div>
+            <button className="customer-checkout-button" disabled={isSubmitting} onClick={submitOrder}>
+              {isSubmitting ? "Sending..." : "Place Order"}
+            </button>
+          </section>
+        )}
       </section>
 
       {selectedItem && (
