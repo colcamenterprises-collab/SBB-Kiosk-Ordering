@@ -5,6 +5,7 @@ import { ErrorBoundary } from "./ErrorBoundary";
 import "./styles.css";
 import "./sync.css";
 import "./error-boundary.css";
+import "./voice.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
