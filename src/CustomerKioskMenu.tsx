@@ -4,6 +4,7 @@ import { categories, menuItems, modifierGroups } from "./data/menu";
 import { createOrder } from "./lib/orders";
 import { createApiOrder } from "./lib/api";
 import { safeId } from "./lib/id";
+import { customerProductImage } from "./assets/customerProductImage";
 import type { CartItem, MenuItem, Modifier, Order } from "./types";
 
 const formatThb = (value: number) => `฿${value.toLocaleString("en-TH")}`;
@@ -113,8 +114,10 @@ export function CustomerKioskMenu() {
 
         <section className="customer-card-grid" aria-label="Menu items">
           {visibleItems.map((item) => (
-            <article className="craving-card no-cutout-yet" key={item.id}>
-              <button className="craving-image-button" onClick={() => { setSelectedItem(item); setSelectedModifiers([]); }} aria-label={`View ${item.name}`} />
+            <article className="craving-card" key={item.id}>
+              <button className="craving-image-button" onClick={() => { setSelectedItem(item); setSelectedModifiers([]); }} aria-label={`View ${item.name}`}>
+                <img src={customerProductImage} alt={item.name} />
+              </button>
               <h2>{item.name}</h2>
               <p>{descriptionPreview(item.description)}</p>
               <footer>
@@ -138,7 +141,7 @@ export function CustomerKioskMenu() {
         <div className="customer-modal-backdrop" onClick={() => setSelectedItem(null)}>
           <section className="customer-item-sheet" onClick={(event) => event.stopPropagation()}>
             <button className="customer-close" onClick={() => setSelectedItem(null)} aria-label="Close"><X size={24} /></button>
-            <div className="customer-modal-image-space" />
+            <img src={customerProductImage} alt={selectedItem.name} />
             <h2>{selectedItem.name}</h2>
             <p>{selectedItem.description}</p>
             <strong>{formatThb(selectedItem.priceThb)}</strong>
