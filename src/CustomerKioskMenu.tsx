@@ -113,10 +113,8 @@ export function CustomerKioskMenu() {
 
         <section className="customer-card-grid" aria-label="Menu items">
           {visibleItems.map((item) => (
-            <article className="craving-card" key={item.id}>
-              <button className="craving-image-button" onClick={() => { setSelectedItem(item); setSelectedModifiers([]); }} aria-label={`View ${item.name}`}>
-                <img src={item.image} alt={item.name} />
-              </button>
+            <article className="craving-card no-cutout-yet" key={item.id}>
+              <button className="craving-image-button" onClick={() => { setSelectedItem(item); setSelectedModifiers([]); }} aria-label={`View ${item.name}`} />
               <h2>{item.name}</h2>
               <p>{descriptionPreview(item.description)}</p>
               <footer>
@@ -140,7 +138,7 @@ export function CustomerKioskMenu() {
         <div className="customer-modal-backdrop" onClick={() => setSelectedItem(null)}>
           <section className="customer-item-sheet" onClick={(event) => event.stopPropagation()}>
             <button className="customer-close" onClick={() => setSelectedItem(null)} aria-label="Close"><X size={24} /></button>
-            <img src={selectedItem.image} alt={selectedItem.name} />
+            <div className="customer-modal-image-space" />
             <h2>{selectedItem.name}</h2>
             <p>{selectedItem.description}</p>
             <strong>{formatThb(selectedItem.priceThb)}</strong>
