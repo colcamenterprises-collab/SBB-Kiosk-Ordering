@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { categories, menuItems, modifierGroups } from "../src/data/menu";
 import type { OrderStatus, OrderType } from "../src/types";
+import { customerProductImageBase64 } from "./customer-product-image";
 import {
   createStoredOrder,
   getOrder,
@@ -20,8 +21,15 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const distPath = path.resolve(__dirname, "../dist");
 const indexPath = path.join(distPath, "index.html");
+const customerProductImageBuffer = Buffer.from(customerProductImageBase64, "base64");
 
 app.use(express.json({ limit: "1mb" }));
+
+app.get("/assets/customer-product-cutout.webp", (_req, res) => {
+  res.setHeader("Content-Type", "image/webp");
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.send(customerProductImageBuffer);
+});
 
 app.get("/api/healthz", async (_req, res) => {
   const state = await getStoreState();
