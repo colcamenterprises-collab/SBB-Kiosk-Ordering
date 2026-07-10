@@ -6,6 +6,7 @@ import "./styles.css";
 import "./sync.css";
 import "./error-boundary.css";
 import "./voice.css";
+import "./pos.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
