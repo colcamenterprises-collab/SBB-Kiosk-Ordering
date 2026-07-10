@@ -1,0 +1,53 @@
+.voice-controls {
+  position: fixed;
+  top: 3.8rem;
+  right: 1rem;
+  z-index: 5;
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.voice-button {
+  min-height: 2.7rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  padding: 0 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  backdrop-filter: blur(12px);
+}
+
+.voice-button.active {
+  background: #080808;
+  border-color: rgba(40, 214, 126, 0.55);
+  color: #9dffbd;
+}
+
+.voice-button:disabled {
+  opacity: 0.52;
+  cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+  .voice-controls {
+    top: auto;
+    right: 1rem;
+    bottom: 1rem;
+    left: 1rem;
+    justify-content: center;
+  }
+
+  .voice-button {
+    flex: 1;
+  }
+}
