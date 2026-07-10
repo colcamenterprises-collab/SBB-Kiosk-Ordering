@@ -7,7 +7,6 @@ Type=simple
 WorkingDirectory=/root/SBB-Kiosk-Ordering
 Environment=NODE_ENV=production
 Environment=PORT=4110
-Environment=PREVIEW_PORT=5174
 EnvironmentFile=-/root/SBB-Kiosk-Ordering/.env
 ExecStart=/usr/bin/npm run serve:all
 Restart=always
