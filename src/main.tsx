@@ -9,6 +9,7 @@ import "./voice.css";
 import "./pos.css";
 import "./white-ui.css";
 import "./customer-kiosk-exact.css";
+import "./customer-kiosk-final-pass.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
