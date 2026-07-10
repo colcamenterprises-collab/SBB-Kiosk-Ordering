@@ -15,7 +15,6 @@ export function getOrders(): Order[] {
 
 export function saveOrders(orders: Order[]) {
   localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(orders));
-  window.dispatchEvent(new CustomEvent("sbb-orders-updated"));
 }
 
 export function createOrder(orderType: OrderType, cartItems: CartItem[]): Order {
