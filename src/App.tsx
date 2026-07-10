@@ -48,7 +48,7 @@ function useOrders() {
 
     void refresh();
     window.addEventListener("storage", refresh);
-    const timer = window.setInterval(refresh, 2000);
+    const timer = window.setInterval(refresh, 1000);
     return () => {
       alive = false;
       window.removeEventListener("storage", refresh);
@@ -314,7 +314,6 @@ function StatusScreen({ navigate }: { navigate: (path: string) => void }) {
   const [voiceEnabled, setVoiceEnabled] = useState(false);
   const [voiceSupported, setVoiceSupported] = useState(() => canUseSpeech());
   const announcedReadyIdsRef = useRef<Set<string>>(new Set());
-  const previousReadyIdsRef = useRef<Set<string>>(new Set());
   const preparing = orders.filter((order) => order.status === "new" || order.status === "preparing");
   const ready = orders.filter((order) => order.status === "ready");
 
@@ -323,30 +322,23 @@ function StatusScreen({ navigate }: { navigate: (path: string) => void }) {
   }, []);
 
   useEffect(() => {
-    const readyIds = new Set(ready.map((order) => order.id));
+    if (!voiceEnabled) return;
 
-    if (!voiceEnabled) {
-      previousReadyIdsRef.current = readyIds;
-      return;
-    }
-
-    ready.forEach((order) => {
-      const becameReady = !previousReadyIdsRef.current.has(order.id);
-      const alreadyAnnounced = announcedReadyIdsRef.current.has(order.id);
-      if (becameReady && !alreadyAnnounced) {
-        announcedReadyIdsRef.current.add(order.id);
-        announceReadyOrder(order.ticketNumber);
-      }
+    const unseenReady = ready.filter((order) => !announcedReadyIdsRef.current.has(order.id));
+    unseenReady.forEach((order, index) => {
+      announcedReadyIdsRef.current.add(order.id);
+      window.setTimeout(() => announceReadyOrder(order.ticketNumber), index * 1800);
     });
-
-    previousReadyIdsRef.current = readyIds;
   }, [ready, voiceEnabled]);
 
   const enableVoice = () => {
-    const currentReadyIds = new Set(ready.map((order) => order.id));
-    currentReadyIds.forEach((id) => announcedReadyIdsRef.current.add(id));
-    previousReadyIdsRef.current = currentReadyIds;
     setVoiceEnabled(true);
+    if (ready.length > 0) {
+      ready.forEach((order) => announcedReadyIdsRef.current.add(order.id));
+      announceReadyList(ready.map((order) => order.ticketNumber));
+      return;
+    }
+
     announceVoiceEnabled();
   };
 
