@@ -1,38 +1,35 @@
 import express from "express";
 import { categories, menuItems, modifierGroups } from "../src/data/menu";
-import type { Order, OrderStatus } from "../src/types";
+import type { OrderStatus, OrderType } from "../src/types";
+import {
+  createStoredOrder,
+  getOrder,
+  getStoreState,
+  initializeOrderStore,
+  listOrders,
+  updateStoredOrderStatus
+} from "./order-store";
 
 const app = express();
 const port = Number(process.env.PORT ?? 4110);
-const orders: Order[] = [];
-const startedAt = new Date().toISOString();
-let ticketSeed = 100;
+const allowedStatuses: OrderStatus[] = ["new", "preparing", "ready", "collected", "cancelled"];
+const allowedOrderTypes: OrderType[] = ["dine_in", "takeaway", "pickup"];
 
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
 
-app.get("/api/healthz", (_req, res) => {
-  res.json({ status: "ok", service: "sbb-kiosk-ordering" });
+app.get("/api/healthz", async (_req, res) => {
+  const state = await getStoreState();
+  res.json({ status: "ok", service: "sbb-kiosk-ordering", dataSource: state.dataSource });
 });
 
-app.get("/api/debug/state", (_req, res) => {
+app.get("/api/debug/state", async (_req, res) => {
+  const state = await getStoreState();
   res.json({
     service: "sbb-kiosk-ordering",
-    startedAt,
     port,
-    ticketSeed,
-    orderCount: orders.length,
+    ...state,
     categoryCount: categories.length,
-    itemCount: menuItems.length,
-    latestOrders: orders.slice(0, 8).map((order) => ({
-      id: order.id,
-      ticketNumber: order.ticketNumber,
-      status: order.status,
-      orderType: order.orderType,
-      itemCount: order.items.reduce((sum, item) => sum + item.quantity, 0),
-      totalThb: order.totalThb,
-      createdAt: order.createdAt,
-      updatedAt: order.updatedAt
-    }))
+    itemCount: menuItems.length
   });
 });
 
@@ -40,47 +37,44 @@ app.get("/api/menu", (_req, res) => {
   res.json({ categories, items: menuItems, modifierGroups });
 });
 
-app.post("/api/orders", (req, res) => {
-  const now = new Date().toISOString();
-  const order: Order = {
-    id: crypto.randomUUID(),
-    ticketNumber: ++ticketSeed,
-    orderType: req.body.orderType ?? "takeaway",
-    status: "new",
-    items: req.body.items ?? [],
-    subtotalThb: Number(req.body.subtotalThb ?? 0),
-    totalThb: Number(req.body.totalThb ?? req.body.subtotalThb ?? 0),
-    createdAt: now,
-    updatedAt: now
-  };
-  orders.unshift(order);
+app.post("/api/orders", async (req, res) => {
+  const orderType = allowedOrderTypes.includes(req.body.orderType) ? req.body.orderType as OrderType : "takeaway";
+  const items = Array.isArray(req.body.items) ? req.body.items : [];
+  const subtotalThb = Number(req.body.subtotalThb ?? 0);
+  const totalThb = Number(req.body.totalThb ?? subtotalThb);
+
+  const order = await createStoredOrder({
+    orderType,
+    items,
+    subtotalThb,
+    totalThb
+  });
+
   res.status(201).json(order);
 });
 
-app.get("/api/orders", (_req, res) => {
-  res.json(orders);
+app.get("/api/orders", async (_req, res) => {
+  res.json(await listOrders());
 });
 
-app.get("/api/orders/:id", (req, res) => {
-  const order = orders.find((item) => item.id === req.params.id);
+app.get("/api/orders/:id", async (req, res) => {
+  const order = await getOrder(req.params.id);
   if (!order) return res.status(404).json({ error: "Order not found" });
   return res.json(order);
 });
 
-app.patch("/api/orders/:id/status", (req, res) => {
-  const allowedStatuses: OrderStatus[] = ["new", "preparing", "ready", "collected", "cancelled"];
+app.patch("/api/orders/:id/status", async (req, res) => {
   if (!allowedStatuses.includes(req.body.status)) {
     return res.status(400).json({ error: "Invalid order status" });
   }
 
-  const order = orders.find((item) => item.id === req.params.id);
+  const order = await updateStoredOrderStatus(req.params.id, req.body.status as OrderStatus);
   if (!order) return res.status(404).json({ error: "Order not found" });
-  order.status = req.body.status as OrderStatus;
-  order.updatedAt = new Date().toISOString();
   return res.json(order);
 });
 
-app.get("/api/status-board", (_req, res) => {
+app.get("/api/status-board", async (_req, res) => {
+  const orders = await listOrders();
   res.json({
     preparing: orders.filter((order) => order.status === "new" || order.status === "preparing"),
     ready: orders.filter((order) => order.status === "ready")
@@ -91,6 +85,8 @@ app.use((error: unknown, _req: express.Request, res: express.Response, _next: ex
   console.error("SBB kiosk API error", error);
   res.status(500).json({ error: "Unexpected kiosk API error" });
 });
+
+await initializeOrderStore();
 
 app.listen(port, "0.0.0.0", () => {
   console.log(`SBB Kiosk API listening on ${port}`);
