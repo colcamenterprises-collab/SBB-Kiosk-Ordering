@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Check, ChefHat, Clock, Home, Minus, Plus, ReceiptText, RotateCcw, ShoppingCart, Tv, Volume2, Wifi, WifiOff } from "lucide-react";
+import { ArrowLeft, Check, ChefHat, Clock, Minus, Plus, RotateCcw, Tv, Volume2, Wifi, WifiOff } from "lucide-react";
 import { categories, menuItems, modifierGroups } from "./data/menu";
 import { createOrder, getOrders, saveOrders, updateOrderStatus } from "./lib/orders";
 import { createApiOrder, fetchApiOrders, updateApiOrderStatus, type OrderSource } from "./lib/api";
@@ -9,6 +9,7 @@ import { StaffPosScreen } from "./StaffPos";
 import type { CartItem, MenuItem, Modifier, Order, OrderStatus, OrderType } from "./types";
 
 const formatThb = (value: number) => `฿${value.toLocaleString("en-TH")}`;
+const CUSTOMER_ORDER_TYPE: OrderType = "takeaway";
 const VOICE_ENABLED_STORAGE_KEY = "sbb-status-voice-enabled";
 const VOICE_ANNOUNCED_STORAGE_KEY = "sbb-status-announced-ready-ids";
 
@@ -111,52 +112,57 @@ function SyncBadge({ source }: { source: OrderSource }) {
 }
 
 function KioskScreen({ navigate }: { navigate: (path: string) => void }) {
-  const [orderType, setOrderType] = useState<OrderType | null>(null);
-  const [activeCategory, setActiveCategory] = useState(categories[0].id);
+  const customerCategories = [{ id: "hot-selling", name: "Hot Selling" }, ...categories.map((category) => ({ id: category.id, name: category.name }))];
+  const [activeCategory, setActiveCategory] = useState(customerCategories[1]?.id ?? "hot-selling");
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [selectedModifiers, setSelectedModifiers] = useState<Modifier[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [confirmedOrder, setConfirmedOrder] = useState<Order | null>(null);
-  const [orderSource, setOrderSource] = useState<OrderSource>("local");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const activeItems = menuItems.filter((item) => item.categoryId === activeCategory && item.isAvailable);
+  const availableItems = menuItems.filter((item) => item.isAvailable);
+  const activeItems = activeCategory === "hot-selling"
+    ? availableItems.filter((item) => item.categoryId === "burgers").slice(0, 3)
+    : availableItems.filter((item) => item.categoryId === activeCategory).slice(0, 3);
   const cartTotal = cart.reduce((sum, item) => {
     const extras = item.modifiers.reduce((extraSum, modifier) => extraSum + modifier.priceDeltaThb, 0);
     return sum + (item.priceThb + extras) * item.quantity;
   }, 0);
+  const cartLineCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const itemGroups = selectedItem?.modifierGroupIds?.map((groupId) => modifierGroups.find((group) => group.id === groupId)).filter(Boolean) ?? [];
 
-  const addSelectedToCart = () => {
-    if (!selectedItem) return;
+  const addItemToCart = (item: MenuItem, modifiers: Modifier[] = []) => {
     setCart((current) => [
       ...current,
       {
         cartId: safeId("cart"),
-        itemId: selectedItem.id,
-        name: selectedItem.name,
-        priceThb: selectedItem.priceThb,
-        image: selectedItem.image,
+        itemId: item.id,
+        name: item.name,
+        priceThb: item.priceThb,
+        image: item.image,
         quantity: 1,
-        modifiers: selectedModifiers
+        modifiers
       }
     ]);
+  };
+
+  const addSelectedToCart = () => {
+    if (!selectedItem) return;
+    addItemToCart(selectedItem, selectedModifiers);
     setSelectedItem(null);
     setSelectedModifiers([]);
   };
 
   const submitOrder = async () => {
-    if (!orderType || cart.length === 0 || isSubmitting) return;
+    if (cart.length === 0 || isSubmitting) return;
     setIsSubmitting(true);
     try {
-      const order = await createApiOrder(orderType, cart);
+      const order = await createApiOrder(CUSTOMER_ORDER_TYPE, cart);
       setConfirmedOrder(order);
-      setOrderSource("api");
     } catch {
-      const order = createOrder(orderType, cart);
+      const order = createOrder(CUSTOMER_ORDER_TYPE, cart);
       setConfirmedOrder(order);
-      setOrderSource("local");
     } finally {
       setCart([]);
       setIsSubmitting(false);
@@ -165,83 +171,70 @@ function KioskScreen({ navigate }: { navigate: (path: string) => void }) {
 
   if (confirmedOrder) {
     return (
-      <main className="kiosk-shell confirmation-screen">
+      <main className="kiosk-shell customer-confirmation">
         <div className="success-card">
           <div className="success-ring"><Check size={62} /></div>
           <p>Order confirmed</p>
           <h1>#{confirmedOrder.ticketNumber}</h1>
-          <SyncBadge source={orderSource} />
-          <span>Watch the status screen for your number.</span>
-          <button className="primary-action" onClick={() => { setConfirmedOrder(null); setOrderType(null); }}>Start New Order</button>
+          <span>Watch the pickup screen for your number.</span>
+          <button className="primary-action" onClick={() => setConfirmedOrder(null)}>Start New Order</button>
         </div>
       </main>
     );
   }
 
-  if (!orderType) {
-    return (
-      <main className="kiosk-shell start-screen">
-        <section className="brand-hero">
-          <span>Smash Brothers Burgers</span>
-          <h1>Order Here</h1>
-          <p>Choose your order type to start.</p>
-        </section>
-        <section className="order-type-grid">
-          <button onClick={() => setOrderType("dine_in")}><Home />Dine In</button>
-          <button onClick={() => setOrderType("takeaway")}><ShoppingCart />Takeaway</button>
-          <button onClick={() => setOrderType("pickup")}><ReceiptText />Pickup</button>
-        </section>
-        <section className="staff-links">
-          <button onClick={() => navigate("/pos")}><ReceiptText /> Staff POS</button>
-          <button onClick={() => navigate("/kitchen")}><ChefHat /> Kitchen</button>
-          <button onClick={() => navigate("/status")}><Tv /> Status</button>
-        </section>
-      </main>
-    );
-  }
-
   return (
-    <main className="kiosk-shell menu-screen">
-      <header className="kiosk-header">
-        <button onClick={() => setOrderType(null)}><ArrowLeft /> Back</button>
-        <div><span>SBB</span><strong>{orderType.replace("_", " ")}</strong></div>
-        <button onClick={() => navigate("/status")}><Tv /> Status</button>
-      </header>
+    <main className="kiosk-shell customer-kiosk">
+      <section className="customer-menu-panel">
+        <header className="customer-kiosk-top">
+          <h1>Pick Your Craving</h1>
+          <p>Every bite hits different. Choose your category and feast.</p>
+        </header>
 
-      <nav className="category-rail">
-        {categories.map((category) => (
-          <button key={category.id} className={activeCategory === category.id ? "active" : ""} onClick={() => setActiveCategory(category.id)}>
-            <img src={category.image} alt="" />
-            <span>{category.name}</span>
-          </button>
-        ))}
-      </nav>
+        <nav className="customer-category-tabs" aria-label="Menu categories">
+          {customerCategories.map((category) => (
+            <button key={category.id} className={activeCategory === category.id ? "active" : ""} onClick={() => setActiveCategory(category.id)}>
+              {category.name}
+            </button>
+          ))}
+        </nav>
 
-      <section className="product-grid">
-        {activeItems.map((item) => (
-          <button className="product-card" key={item.id} onClick={() => { setSelectedItem(item); setSelectedModifiers([]); }}>
-            <img src={item.image} alt={item.name} />
-            <div>
+        <section className="customer-product-grid">
+          {activeItems.map((item) => (
+            <article className="customer-product-card" key={item.id}>
+              <button className="customer-product-open" onClick={() => { setSelectedItem(item); setSelectedModifiers([]); }} aria-label={`Customize ${item.name}`}>
+                <img src={item.image} alt={item.name} />
+              </button>
               <h2>{item.name}</h2>
-              <p>{item.description}</p>
-              <strong>{formatThb(item.priceThb)}</strong>
-            </div>
-            {item.tags?.[0] && <span className="tag">{item.tags[0]}</span>}
+              <p>{shortDescription(item.description)}</p>
+              <footer className="customer-card-footer">
+                <strong className="customer-price">{formatThb(item.priceThb)}</strong>
+                <button className="customer-add-button" onClick={() => addItemToCart(item)} aria-label={`Add ${item.name}`}>+</button>
+              </footer>
+            </article>
+          ))}
+        </section>
+
+        <section className={cart.length === 0 ? "customer-cart-strip empty" : "customer-cart-strip"} aria-live="polite">
+          <div className="customer-cart-summary">
+            <strong>{cartLineCount} item{cartLineCount === 1 ? "" : "s"}</strong>
+            <span>Total {formatThb(cartTotal)}</span>
+          </div>
+          <button className="customer-checkout-button" disabled={cart.length === 0 || isSubmitting} onClick={submitOrder}>
+            {isSubmitting ? "Sending..." : "Place Order"}
           </button>
-        ))}
+        </section>
       </section>
 
-      <CartBar cart={cart} total={cartTotal} isSubmitting={isSubmitting} onQuantity={(cartId, direction) => {
-        setCart((current) => current.flatMap((item) => {
-          if (item.cartId !== cartId) return [item];
-          const quantity = item.quantity + direction;
-          return quantity <= 0 ? [] : [{ ...item, quantity }];
-        }));
-      }} onSubmit={submitOrder} />
+      <section className="customer-utility-links" aria-label="Staff shortcuts">
+        <button onClick={() => navigate("/pos")}>POS</button>
+        <button onClick={() => navigate("/kitchen")}>Kitchen</button>
+        <button onClick={() => navigate("/status")}>Status</button>
+      </section>
 
       {selectedItem && (
         <div className="modal-backdrop" onClick={() => setSelectedItem(null)}>
-          <div className="item-modal" onClick={(event) => event.stopPropagation()}>
+          <div className="item-modal customer-item-modal" onClick={(event) => event.stopPropagation()}>
             <button className="close-btn" onClick={() => setSelectedItem(null)}>×</button>
             <img src={selectedItem.image} alt={selectedItem.name} />
             <h2>{selectedItem.name}</h2>
@@ -274,23 +267,9 @@ function KioskScreen({ navigate }: { navigate: (path: string) => void }) {
   );
 }
 
-function CartBar({ cart, total, isSubmitting, onQuantity, onSubmit }: { cart: CartItem[]; total: number; isSubmitting: boolean; onQuantity: (cartId: string, direction: number) => void; onSubmit: () => void }) {
-  return (
-    <aside className="cart-bar">
-      <div className="cart-list">
-        {cart.length === 0 ? <span>Your order is empty</span> : cart.map((item) => (
-          <div className="cart-row" key={item.cartId}>
-            <img src={item.image} alt="" />
-            <div><strong>{item.name}</strong><span>{item.modifiers.map((modifier) => modifier.name).join(", ")}</span></div>
-            <button onClick={() => onQuantity(item.cartId, -1)}><Minus size={16} /></button>
-            <b>{item.quantity}</b>
-            <button onClick={() => onQuantity(item.cartId, 1)}><Plus size={16} /></button>
-          </div>
-        ))}
-      </div>
-      <div className="cart-total"><span>Total</span><strong>{formatThb(total)}</strong><button disabled={cart.length === 0 || isSubmitting} onClick={onSubmit}>{isSubmitting ? "Sending..." : "Place Order"}</button></div>
-    </aside>
-  );
+function shortDescription(description: string) {
+  if (description.length <= 58) return description;
+  return `${description.slice(0, 58).trim()}...`;
 }
 
 function KitchenScreen({ navigate }: { navigate: (path: string) => void }) {
