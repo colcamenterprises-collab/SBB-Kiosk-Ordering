@@ -5,12 +5,35 @@ import type { Order, OrderStatus } from "../src/types";
 const app = express();
 const port = Number(process.env.PORT ?? 4110);
 const orders: Order[] = [];
+const startedAt = new Date().toISOString();
 let ticketSeed = 100;
 
 app.use(express.json());
 
 app.get("/api/healthz", (_req, res) => {
   res.json({ status: "ok", service: "sbb-kiosk-ordering" });
+});
+
+app.get("/api/debug/state", (_req, res) => {
+  res.json({
+    service: "sbb-kiosk-ordering",
+    startedAt,
+    port,
+    ticketSeed,
+    orderCount: orders.length,
+    categoryCount: categories.length,
+    itemCount: menuItems.length,
+    latestOrders: orders.slice(0, 8).map((order) => ({
+      id: order.id,
+      ticketNumber: order.ticketNumber,
+      status: order.status,
+      orderType: order.orderType,
+      itemCount: order.items.reduce((sum, item) => sum + item.quantity, 0),
+      totalThb: order.totalThb,
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt
+    }))
+  });
 });
 
 app.get("/api/menu", (_req, res) => {
@@ -45,6 +68,11 @@ app.get("/api/orders/:id", (req, res) => {
 });
 
 app.patch("/api/orders/:id/status", (req, res) => {
+  const allowedStatuses: OrderStatus[] = ["new", "preparing", "ready", "collected", "cancelled"];
+  if (!allowedStatuses.includes(req.body.status)) {
+    return res.status(400).json({ error: "Invalid order status" });
+  }
+
   const order = orders.find((item) => item.id === req.params.id);
   if (!order) return res.status(404).json({ error: "Order not found" });
   order.status = req.body.status as OrderStatus;
@@ -57,6 +85,11 @@ app.get("/api/status-board", (_req, res) => {
     preparing: orders.filter((order) => order.status === "new" || order.status === "preparing"),
     ready: orders.filter((order) => order.status === "ready")
   });
+});
+
+app.use((error: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error("SBB kiosk API error", error);
+  res.status(500).json({ error: "Unexpected kiosk API error" });
 });
 
 app.listen(port, "0.0.0.0", () => {
