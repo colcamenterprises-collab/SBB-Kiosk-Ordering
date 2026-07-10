@@ -1,0 +1,455 @@
+/* Exact Customer Kiosk Menu
+   Rebuilt from the locked design brief:
+   edge-to-edge customer page, no yellow frame, no technical UI,
+   centered headline, small pills, three product cards only.
+*/
+
+:root {
+  --sbb-white: #ffffff;
+  --sbb-card: #fffefa;
+  --sbb-cream-pill: #f1e4c5;
+  --sbb-yellow: #ffc928;
+  --sbb-burgundy: #5a000b;
+  --sbb-orange: #f25f1d;
+  --sbb-text: #140202;
+  --sbb-muted: rgba(20, 2, 2, 0.46);
+  --sbb-line: rgba(61, 26, 0, 0.12);
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  background: var(--sbb-white) !important;
+}
+
+.customer-screen {
+  min-height: 100vh;
+  width: 100vw;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--sbb-white) !important;
+  color: var(--sbb-text);
+  padding: clamp(1rem, 2vw, 1.4rem);
+}
+
+.customer-stage {
+  width: min(100%, 91rem);
+  min-height: min(56rem, calc(100vh - clamp(2rem, 4vw, 2.8rem)));
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: clamp(1.25rem, 2.1vw, 1.95rem);
+  align-content: center;
+  position: relative;
+  border: 1px solid var(--sbb-line);
+  border-radius: clamp(1.45rem, 2.6vw, 2.15rem);
+  background: var(--sbb-white);
+  padding: clamp(2.1rem, 5.2vw, 5.1rem) clamp(2.2rem, 5.8vw, 6.5rem) clamp(2.35rem, 4.4vw, 4rem);
+  box-shadow: 0 12px 34px rgba(61, 26, 0, 0.08);
+}
+
+.customer-stage::before,
+.customer-stage::after {
+  content: "";
+  position: absolute;
+  left: clamp(2rem, 5vw, 4rem);
+  right: clamp(2rem, 5vw, 4rem);
+  height: 1rem;
+  bottom: -0.62rem;
+  border-radius: 0 0 1.7rem 1.7rem;
+  border: 1px solid var(--sbb-line);
+  border-top: 0;
+  background: var(--sbb-white);
+  pointer-events: none;
+}
+
+.customer-stage::after {
+  left: clamp(3.2rem, 7vw, 6.5rem);
+  right: clamp(3.2rem, 7vw, 6.5rem);
+  bottom: -1.2rem;
+  opacity: 0.7;
+}
+
+.customer-title-block {
+  text-align: center;
+}
+
+.customer-title-block h1 {
+  margin: 0;
+  color: var(--sbb-burgundy);
+  font-family: Impact, Haettenschweiler, "Arial Black", "Arial Narrow", system-ui, sans-serif;
+  font-size: clamp(2.55rem, 5.8vw, 5.05rem);
+  font-weight: 1000;
+  line-height: 0.86;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+}
+
+.customer-title-block p {
+  margin: 0.85rem 0 0;
+  color: var(--sbb-muted);
+  font-size: clamp(0.88rem, 1.35vw, 1.08rem);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.customer-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.65rem, 1.5vw, 1.25rem);
+  overflow-x: auto;
+  padding: 0.05rem 0.25rem 0.25rem;
+}
+
+.customer-tabs button {
+  min-width: clamp(6.9rem, 10vw, 9.3rem);
+  min-height: 2.28rem;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 999px;
+  background: var(--sbb-cream-pill);
+  color: var(--sbb-burgundy);
+  font-family: Impact, Haettenschweiler, "Arial Black", "Arial Narrow", system-ui, sans-serif;
+  font-size: clamp(0.76rem, 1.05vw, 0.95rem);
+  font-weight: 1000;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  box-shadow: none;
+}
+
+.customer-tabs button.active {
+  background: var(--sbb-yellow);
+  color: var(--sbb-text);
+}
+
+.customer-card-grid {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1.05rem, 2.05vw, 1.75rem);
+  align-items: stretch;
+}
+
+.craving-card {
+  min-height: clamp(25rem, 48vh, 32.5rem);
+  display: grid;
+  grid-template-rows: minmax(12.4rem, 1fr) auto auto auto;
+  overflow: hidden;
+  border: 1px solid var(--sbb-line);
+  border-radius: clamp(1.08rem, 1.7vw, 1.48rem);
+  background: var(--sbb-card);
+  padding: clamp(0.95rem, 1.55vw, 1.35rem);
+  box-shadow: 0 9px 24px rgba(61, 26, 0, 0.08);
+}
+
+.craving-image-button {
+  width: 100%;
+  min-height: clamp(12rem, 23vh, 15.8rem);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+}
+
+.craving-image-button img {
+  width: 82%;
+  height: 100%;
+  max-height: clamp(11.6rem, 22vh, 15.3rem);
+  object-fit: contain;
+  object-position: center bottom;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  filter: drop-shadow(0 12px 12px rgba(61, 26, 0, 0.1));
+}
+
+.craving-card h2 {
+  margin: 0.35rem 0 0;
+  color: var(--sbb-text);
+  font-family: Impact, Haettenschweiler, "Arial Black", "Arial Narrow", system-ui, sans-serif;
+  font-size: clamp(1.02rem, 1.55vw, 1.38rem);
+  font-weight: 1000;
+  line-height: 1;
+  letter-spacing: -0.025em;
+  text-transform: uppercase;
+}
+
+.craving-card p {
+  min-height: 2.5rem;
+  margin: 0.55rem 0 0;
+  color: var(--sbb-muted);
+  font-size: clamp(0.84rem, 1.08vw, 0.98rem);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.craving-card footer {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: clamp(1rem, 1.65vw, 1.35rem);
+}
+
+.craving-card footer strong {
+  color: var(--sbb-orange);
+  font-size: clamp(1.58rem, 2.48vw, 2.12rem);
+  font-weight: 1000;
+  letter-spacing: -0.055em;
+}
+
+.craving-add-button {
+  width: clamp(2.35rem, 3.4vw, 2.85rem);
+  height: clamp(2.35rem, 3.4vw, 2.85rem);
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 0.68rem;
+  background: var(--sbb-burgundy);
+  color: var(--sbb-white);
+  font-size: clamp(1.3rem, 1.85vw, 1.7rem);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.customer-checkout-strip {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(1rem, 2vw, 1.5rem);
+  transform: translateX(-50%);
+  min-width: min(34rem, calc(100% - 3rem));
+  min-height: 3.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  border: 1px solid var(--sbb-line);
+  border-radius: 999px;
+  background: var(--sbb-white);
+  padding: 0.45rem 0.55rem 0.45rem 1.1rem;
+  box-shadow: 0 12px 26px rgba(61, 26, 0, 0.08);
+}
+
+.customer-checkout-strip span {
+  color: var(--sbb-text);
+  font-weight: 900;
+}
+
+.customer-checkout-strip strong {
+  color: var(--sbb-orange);
+  font-size: 1.25rem;
+  font-weight: 1000;
+}
+
+.customer-checkout-strip button {
+  min-width: 10rem;
+  min-height: 2.75rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--sbb-burgundy);
+  color: var(--sbb-white);
+  font-weight: 1000;
+  text-transform: uppercase;
+}
+
+.customer-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.18);
+  padding: 1rem;
+}
+
+.customer-item-sheet {
+  width: min(42rem, calc(100vw - 2rem));
+  max-height: min(88vh, 48rem);
+  position: relative;
+  overflow: auto;
+  border: 1px solid var(--sbb-line);
+  border-radius: 1.75rem;
+  background: var(--sbb-white);
+  padding: 1.3rem;
+  color: var(--sbb-text);
+  box-shadow: 0 20px 50px rgba(61, 26, 0, 0.12);
+}
+
+.customer-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 2.65rem;
+  height: 2.65rem;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: var(--sbb-white);
+  color: var(--sbb-text);
+  box-shadow: 0 8px 20px rgba(61, 26, 0, 0.1);
+}
+
+.customer-item-sheet > img {
+  width: 100%;
+  height: min(34vh, 17rem);
+  object-fit: contain;
+  background: transparent;
+}
+
+.customer-item-sheet h2 {
+  margin: 0.6rem 0 0;
+  color: var(--sbb-text);
+  font-family: Impact, Haettenschweiler, "Arial Black", "Arial Narrow", system-ui, sans-serif;
+  font-size: 2rem;
+  text-transform: uppercase;
+}
+
+.customer-item-sheet p {
+  color: var(--sbb-muted);
+  font-weight: 600;
+}
+
+.customer-item-sheet > strong {
+  color: var(--sbb-orange);
+  font-size: 2rem;
+  font-weight: 1000;
+}
+
+.customer-modifiers section {
+  margin-top: 1rem;
+}
+
+.customer-modifiers h3 {
+  margin: 0 0 0.55rem;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+}
+
+.customer-modifiers div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.customer-modifiers button {
+  min-height: 2.55rem;
+  border: 1px solid var(--sbb-line);
+  border-radius: 999px;
+  background: var(--sbb-white);
+  color: var(--sbb-text);
+  padding: 0 0.9rem;
+  font-weight: 800;
+}
+
+.customer-modifiers button.active {
+  background: var(--sbb-burgundy);
+  color: var(--sbb-white);
+}
+
+.customer-add-to-order {
+  width: 100%;
+  min-height: 3.7rem;
+  margin-top: 1.2rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--sbb-burgundy);
+  color: var(--sbb-white);
+  font-size: 1rem;
+  font-weight: 1000;
+  text-transform: uppercase;
+}
+
+.customer-confirmed-screen {
+  background: var(--sbb-white) !important;
+}
+
+.customer-confirmed-card {
+  width: min(36rem, calc(100vw - 2rem));
+  display: grid;
+  justify-items: center;
+  gap: 0.8rem;
+  border: 1px solid var(--sbb-line);
+  border-radius: 2rem;
+  background: var(--sbb-white);
+  padding: 3rem 2rem;
+  text-align: center;
+  box-shadow: 0 14px 34px rgba(61, 26, 0, 0.08);
+}
+
+.customer-confirmed-icon {
+  width: 6rem;
+  height: 6rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #20d070;
+  color: var(--sbb-white);
+}
+
+.customer-confirmed-card p {
+  margin: 0;
+  color: var(--sbb-burgundy);
+  font-family: Impact, Haettenschweiler, "Arial Black", "Arial Narrow", system-ui, sans-serif;
+  font-size: 1.2rem;
+  text-transform: uppercase;
+}
+
+.customer-confirmed-card h1 {
+  margin: 0;
+  color: var(--sbb-text);
+  font-size: clamp(5rem, 14vw, 8rem);
+  line-height: 0.9;
+}
+
+.customer-confirmed-card span {
+  color: var(--sbb-muted);
+  font-weight: 700;
+}
+
+.customer-confirmed-card button {
+  min-width: 14rem;
+  min-height: 3.6rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--sbb-burgundy);
+  color: var(--sbb-white);
+  font-weight: 1000;
+}
+
+@media (max-width: 980px) {
+  .customer-screen {
+    overflow: auto;
+    place-items: start center;
+  }
+
+  .customer-stage {
+    min-height: auto;
+    padding: 2rem 1.2rem 2.6rem;
+  }
+
+  .customer-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .craving-card {
+    min-height: 23.5rem;
+  }
+
+  .customer-checkout-strip {
+    position: sticky;
+    transform: none;
+    left: auto;
+    bottom: 0.8rem;
+    min-width: 0;
+  }
+}
