@@ -15,6 +15,7 @@ import "./logo-mark.css";
 import "./order-heading-tweak.css";
 import "./order-page-clean.css";
 import "./design-lock.css";
+import "./white-ui.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
